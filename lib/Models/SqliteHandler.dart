@@ -84,39 +84,13 @@ class NotesDBHandler {
     );
 
     if (isNew) {
-      // get latest note which isn't archived, limit by 1
+      // get latest note, limit by 1
       var one = await db.query("notes", orderBy: "date_last_edited desc",
-          where: "is_archived = ?",
-          whereArgs: [0],
           limit: 1);
       int latestId = one.first["id"] as int;
       return latestId;
     }
     return note.id;
-  }
-
-
-  Future<bool> copyNote(Note note) async {
-    final Database db = await database;
-    try {
-      await db.insert("notes",note.toMap(false), conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch(Error) {
-      print(Error);
-      return false;
-    }
-    return true;
-  }
-
-
-  Future<bool> archiveNote(Note note) async {
-    if (note.id != -1) {
-      final Database db = await database;
-
-      int idToUpdate = note.id;
-
-      db.update("notes", note.toMap(true), where: "id = ?",
-          whereArgs: [idToUpdate]);
-    }
   }
 
   Future<bool> deleteNote(Note note) async {

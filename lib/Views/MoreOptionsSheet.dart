@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'ColorSlider.dart';
 import '../Models/Utility.dart';
 
-enum moreOptions { delete, share, copy }
+enum moreOptions { delete }
 
 class MoreOptionsSheet extends StatefulWidget {
   final Color color;

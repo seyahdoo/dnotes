@@ -170,7 +170,7 @@ class _NotePageState extends State<NotePage> {
       padding: EdgeInsets.symmetric(horizontal: 12),
       child: InkWell(
         child: GestureDetector(
-          onTap: () => bottomSheet(context),
+          onTap: () => reminderMenu(context),
           child: Icon(
             Icons.alarm_add,
             color: CentralStation.fontColor,
@@ -209,6 +209,34 @@ class _NotePageState extends State<NotePage> {
             date_last_edited: _editableNote.date_last_edited,
           );
         });
+  }
+
+  void reminderMenu(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm ?"),
+          content: Text("This note will be deleted permanently"),
+          actions: <Widget>[
+            FlatButton(
+                onPressed: ()  {
+                  _persistenceTimer.cancel();
+                  var noteDB = NotesDBHandler();
+                  Navigator.of(context).pop();
+                  noteDB.deleteNote(_editableNote);
+                  CentralStation.updateNeeded = true;
+
+                  Navigator.of(context).pop();
+
+                },
+                child: Text("Yes")),
+            FlatButton(
+                onPressed: () => {Navigator.of(context).pop()},
+                child: Text("No"))
+          ],
+        );
+      });
   }
 
   void _persistData() {
@@ -267,17 +295,7 @@ class _NotePageState extends State<NotePage> {
           }
           break;
         }
-      case moreOptions.share:
-        {
-          if (_editableNote.content.isNotEmpty) {
-            Share.share("${_editableNote.title}\n${_editableNote.content}");
-          }
-          break;
-        }
-      case moreOptions.copy : {
-          _copy();
-        break;
-      }
+
     }
   }
 
@@ -345,69 +363,13 @@ class _NotePageState extends State<NotePage> {
     return true;
   }
 
-  void _archivePopup(BuildContext context) {
-    if (_editableNote.id != -1) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Confirm ?"),
-              content: Text("This note will be archived"),
-              actions: <Widget>[
-                FlatButton(
-                    onPressed: () => _archiveThisNote(context),
-                    child: Text("Yes")),
-                FlatButton(
-                    onPressed: () => {Navigator.of(context).pop()},
-                    child: Text("No"))
-              ],
-            );
-          });
-    } else {
-      _exitWithoutSaving(context);
-    }
-  }
+
 
   void _exitWithoutSaving(BuildContext context) {
     _persistenceTimer.cancel();
     CentralStation.updateNeeded = false;
     Navigator.of(context).pop();
   }
-
-  void _archiveThisNote(BuildContext context) {
-    Navigator.of(context).pop();
-    // set archived flag to true and send the entire note object in the database to be updated
-    _editableNote.is_archived = 1;
-    var noteDB = NotesDBHandler();
-    noteDB.archiveNote(_editableNote);
-    // update will be required to remove the archived note from the staggered view
-    CentralStation.updateNeeded = true;
-    _persistenceTimer.cancel(); // shutdown the timer
-
-    Navigator.of(context).pop(); // pop back to staggered view
-    // TODO: OPTIONAL show the toast of deletion completion
-    Scaffold.of(context).showSnackBar(new SnackBar(content: Text("deleted")));
-  }
-
-  void _copy(){
-    var noteDB = NotesDBHandler();
-    Note copy = Note(-1,
-        _editableNote.title,
-        _editableNote.content,
-        DateTime.now(),
-        DateTime.now(),
-        _editableNote.note_color) ;
-
-
-    var status = noteDB.copyNote(copy);
-    status.then((query_success){
-      if (query_success){
-        CentralStation.updateNeeded = true;
-        Navigator.of(_globalKey.currentContext).pop();
-      }
-    });
-  }
-
 
 
   void _undo() {
