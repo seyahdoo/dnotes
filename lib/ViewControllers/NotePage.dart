@@ -240,13 +240,6 @@ class _NotePageState extends State<NotePage> {
                 },
                 color: Colors.blue,
                 child: Text("Time", style: TextStyle(color: Colors.white))),
-              RaisedButton(
-                  onPressed: ()  {
-
-
-                  },
-                  color: Colors.blue,
-                  child: Text("Place", style: TextStyle(color: Colors.white))),
             ],
           ),
           actions: <Widget>[
@@ -448,10 +441,7 @@ class _NotePageState extends State<NotePage> {
 
   Future onSelectNotification(String payload) {
 
-    
   }
-
-
 
 
 }
