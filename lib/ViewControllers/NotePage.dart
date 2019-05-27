@@ -6,6 +6,8 @@ import '../Models/Utility.dart';
 import '../Views/MoreOptionsSheet.dart';
 import 'package:share/share.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotePage extends StatefulWidget {
   final Note noteInEditing;
@@ -73,7 +75,7 @@ class _NotePageState extends State<NotePage> {
           leading: BackButton(
             color: Colors.black,
           ),
-          actions: _archiveAction(context),
+          actions: _topMenuBuilder(context),
           elevation: 1,
           backgroundColor: note_color,
           title: _pageTitle(),
@@ -97,21 +99,21 @@ class _NotePageState extends State<NotePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Flexible(
-      child: Container(
-          padding: EdgeInsets.all(5),
-//          decoration: BoxDecoration(border: Border.all(color: CentralStation.borderColor,width: 1 ),borderRadius: BorderRadius.all(Radius.circular(10)) ),
-            child: EditableText(
-                onChanged: (str) => {updateNoteObject()},
-                maxLines: null,
-                controller: _titleController,
-                focusNode: _titleFocus,
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
-                cursorColor: Colors.blue,
-                backgroundCursorColor: Colors.blue),
-          ),
+            child: Container(
+                padding: EdgeInsets.all(5),
+                  //decoration: BoxDecoration(border: Border.all(color: CentralStation.borderColor,width: 1 ),borderRadius: BorderRadius.all(Radius.circular(10)) ),
+                  child: EditableText(
+                    onChanged: (str) => {updateNoteObject()},
+                    maxLines: null,
+                    controller: _titleController,
+                    focusNode: _titleFocus,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold),
+                    cursorColor: Colors.blue,
+                    backgroundCursorColor: Colors.blue),
+                ),
           ),
 
           Divider(color: CentralStation.borderColor,),
@@ -148,7 +150,7 @@ class _NotePageState extends State<NotePage> {
 
 
 
-  List<Widget> _archiveAction(BuildContext context) {
+  List<Widget> _topMenuBuilder(BuildContext context) {
     List<Widget> actions = [];
 
     if (widget.noteInEditing.id != -1) {
@@ -166,18 +168,19 @@ class _NotePageState extends State<NotePage> {
       ));
     }
 
-    actions.add(Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12),
-      child: InkWell(
-        child: GestureDetector(
-          onTap: () => reminderMenu(context),
-          child: Icon(
-            Icons.alarm_add,
-            color: CentralStation.fontColor,
+    actions.add(
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        child: InkWell(
+          child: GestureDetector(
+            onTap: () => reminderMenu(context),
+            child: Icon(
+              Icons.alarm_add,
+              color: CentralStation.fontColor,
+            ),
           ),
         ),
-      ),
-    )
+      )
     );
 
     actions.add(
@@ -211,32 +214,65 @@ class _NotePageState extends State<NotePage> {
         });
   }
 
+
   void reminderMenu(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Confirm ?"),
-          content: Text("This note will be deleted permanently"),
+        var al = AlertDialog(
+          title: Text("Edit Reminder"),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              RaisedButton(
+                onPressed: ()  {
+                  DatePicker.showDateTimePicker(
+                    context,
+                    showTitleActions: true,
+                    currentTime: DateTime.now(),
+                    locale: LocaleType.tr,
+                    onConfirm: (date) {
+                      print('confirm $date');
+                      updateReminder(date);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+                color: Colors.blue,
+                child: Text("Time", style: TextStyle(color: Colors.white))),
+              RaisedButton(
+                  onPressed: ()  {
+
+
+                  },
+                  color: Colors.blue,
+                  child: Text("Place", style: TextStyle(color: Colors.white))),
+            ],
+          ),
           actions: <Widget>[
             FlatButton(
-                onPressed: ()  {
-                  _persistenceTimer.cancel();
-                  var noteDB = NotesDBHandler();
-                  Navigator.of(context).pop();
-                  noteDB.deleteNote(_editableNote);
-                  CentralStation.updateNeeded = true;
-
-                  Navigator.of(context).pop();
-
-                },
-                child: Text("Yes")),
-            FlatButton(
-                onPressed: () => {Navigator.of(context).pop()},
-                child: Text("No"))
+              onPressed: ()  {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel")),
           ],
         );
+
+        //TODO if reminder exists
+        if(true){
+          al.actions.insert(0,
+            FlatButton(
+              onPressed: ()  {
+                cancelReminder();
+                Navigator.of(context).pop();
+              },
+              child: Text("Delete"))
+          );
+        }
+
+        return al;
       });
+
   }
 
   void _persistData() {
@@ -282,6 +318,7 @@ class _NotePageState extends State<NotePage> {
       CentralStation.updateNeeded = true;
     }
   }
+
 
   void bottomSheetOptionTappedHandler(moreOptions tappedOption) {
     print("option tapped: $tappedOption");
@@ -349,10 +386,9 @@ class _NotePageState extends State<NotePage> {
 
   void _saveAndStartNewNote(BuildContext context){
     _persistenceTimer.cancel();
-    var emptyNote = new Note(-1, "", "", DateTime.now(), DateTime.now(), Colors.white);
+    var emptyNote = new Note(-1, "", "", DateTime.now(), DateTime.now(), Colors.white, DateTime.now());
     Navigator.of(context).pop();
     Navigator.push(context, MaterialPageRoute(builder: (ctx) => NotePage(emptyNote)));
-
   }
 
   Future<bool> _readyToPop() async {
@@ -377,4 +413,45 @@ class _NotePageState extends State<NotePage> {
     _contentController.text = _contentFromInitial;// widget.noteInEditing.content;
     _editableNote.date_last_edited = _lastEditedForUndo;// widget.noteInEditing.date_last_edited;
   }
+
+  void updateReminder(DateTime date) async {
+
+    var flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    var android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOS = IOSInitializationSettings();
+    var initSettings = InitializationSettings(android, iOS);
+    flutterLocalNotificationsPlugin.initialize(initSettings,
+        onSelectNotification: onSelectNotification);
+
+    var androidDetail = AndroidNotificationDetails(
+        'com.sadogan.dnotes', 'reminder', 'notification of dnotes reminders');
+    var iOSDetail = IOSNotificationDetails();
+    var platform = NotificationDetails(androidDetail, iOSDetail);
+    await flutterLocalNotificationsPlugin.schedule(
+        _editableNote.id,
+        _titleController.text,
+        _contentController.text,
+        date,
+        platform);
+  }
+
+  void cancelReminder() async {
+    var flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    var android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOS = IOSInitializationSettings();
+    var initSettings = InitializationSettings(android, iOS);
+    flutterLocalNotificationsPlugin.initialize(initSettings,
+        onSelectNotification: onSelectNotification);
+
+    await flutterLocalNotificationsPlugin.cancel(_editableNote.id);
+  }
+
+  Future onSelectNotification(String payload) {
+
+    
+  }
+
+
+
+
 }

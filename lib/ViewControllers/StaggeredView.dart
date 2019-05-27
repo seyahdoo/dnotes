@@ -84,9 +84,10 @@ EdgeInsets _paddingForView(BuildContext context){
       _allNotesInQueryResult[i]["id"],
       _allNotesInQueryResult[i]["title"] == null ? "" : utf8.decode(_allNotesInQueryResult[i]["title"]),
       _allNotesInQueryResult[i]["content"] == null ? "" : utf8.decode(_allNotesInQueryResult[i]["content"]),
-     DateTime.fromMillisecondsSinceEpoch(_allNotesInQueryResult[i]["date_created"] * 1000),
-     DateTime.fromMillisecondsSinceEpoch(_allNotesInQueryResult[i]["date_last_edited"] * 1000),
-      Color(_allNotesInQueryResult[i]["note_color"] ))
+      DateTime.fromMillisecondsSinceEpoch(_allNotesInQueryResult[i]["date_created"] * 1000),
+      DateTime.fromMillisecondsSinceEpoch(_allNotesInQueryResult[i]["date_last_edited"] * 1000),
+      Color(_allNotesInQueryResult[i]["note_color"] ),
+      DateTime.fromMillisecondsSinceEpoch(_allNotesInQueryResult[i]["reminder_time"] * 1000),)
   );
   }
 

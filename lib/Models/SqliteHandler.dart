@@ -17,7 +17,7 @@ class NotesDBHandler {
     "date_created": "INTEGER",
     "date_last_edited": "INTEGER",
     "note_color": "INTEGER",
-    "is_archived": "INTEGER"
+    "reminder_time": "INTEGER",
   };
 
 
@@ -110,9 +110,7 @@ class NotesDBHandler {
   Future<List<Map<String,dynamic>>> selectAllNotes() async {
     final Database db = await database;
     // query all the notes sorted by last edited
-    var data = await db.query("notes", orderBy: "date_last_edited desc",
-        where: "is_archived = ?",
-        whereArgs: [0]);
+    var data = await db.query("notes", orderBy: "date_last_edited desc");
 
     return data;
 
