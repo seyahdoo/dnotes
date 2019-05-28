@@ -8,6 +8,7 @@ import 'package:share/share.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:toast/toast.dart';
 
 class NotePage extends StatefulWidget {
   final Note noteInEditing;
@@ -426,6 +427,7 @@ class _NotePageState extends State<NotePage> {
         _contentController.text,
         date,
         platform);
+    Toast.show("Successfully Created Reminder: $date", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
   }
 
   void cancelReminder() async {
@@ -437,6 +439,7 @@ class _NotePageState extends State<NotePage> {
         onSelectNotification: onSelectNotification);
 
     await flutterLocalNotificationsPlugin.cancel(_editableNote.id);
+    Toast.show("Canceled Reminder", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
   }
 
   Future onSelectNotification(String payload) {
